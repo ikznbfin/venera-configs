@@ -7,14 +7,23 @@ class Wnacg extends ComicSource {
     // unique id of the source
     key = "wnacg"
 
-    version = "1.0.4"
+    version = "1.0.5"
 
     minAppVersion = "1.0.0"
 
     // update url
     url = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/wnacg.js"
 
-    static domains = [];
+    static domains = [
+        "www.wn06.cfd",
+        "www.wn07.cfd",
+        "www.wn07.shop",
+    ];
+
+    static legacyDomains = [
+        "wnacg.com",
+        "www.wnacg.com",
+    ];
 
     get baseUrl() {
         let selection = this.loadSetting('domainSelection')
@@ -27,9 +36,13 @@ class Wnacg extends ComicSource {
             if (!domain0 || domain0.trim() === '') {
                 throw 'Custom domain is not set'
             }
-            return `https://${domain0.trim()}`
+            let domain = domain0.trim()
+            if (Wnacg.legacyDomains.includes(domain)) {
+                domain = Wnacg.domains[0]
+            }
+            return `https://${domain}`
         } else {
-            // 选择获取的域名 (Domain 1-3)
+            // 选择获取的域名 (Domain 1-4)
             let index = selection - 1
             if (index >= Wnacg.domains.length) {
                 throw 'Selected domain is unavailable'
@@ -110,10 +123,11 @@ class Wnacg extends ComicSource {
                     let match = href.match(/^https?:\/\/([^\/]+)/)
                     if (match) {
                         let domain = match[1]
-                        // 只提取有效的域名，排除 wn01.link 自身和其他无关链接
+                        // 只保留漫画站域名，排除发布页、浏览器下载页等无关链接
                         if (domain &&
                             domain.includes(".") &&
-                            !domain.includes("wn01.link") &&
+                            /^www\.wn\d+\./.test(domain) &&
+                            !domain.endsWith(".link") &&
                             !domain.includes("google.cn") &&
                             !domain.includes("cdn-cgi") &&
                             !seenDomains.has(domain)) {
@@ -123,6 +137,19 @@ class Wnacg extends ComicSource {
                     }
                 }
                 document.dispose()
+
+                let validDomains = []
+                for (let domain of domains) {
+                    try {
+                        let checkRes = await fetch(`https://${domain}/`)
+                        if (checkRes.status !== 200) continue
+                        let checkHtml = await checkRes.text()
+                        if (checkHtml.includes("gallary_wrap") && checkHtml.includes("photos-index-aid-")) {
+                            validDomains.push(domain)
+                        }
+                    } catch (e) { }
+                }
+                domains = validDomains
 
                 if (domains.length > 0) {
                     title = "Update Success"
@@ -742,7 +769,8 @@ class Wnacg extends ComicSource {
                 { value: '0', text: 'Custom Domain' },
                 { value: '1', text: 'Domain 1' },
                 { value: '2', text: 'Domain 2' },
-                { value: '3', text: 'Domain 3' }
+                { value: '3', text: 'Domain 3' },
+                { value: '4', text: 'Domain 4' }
             ],
             default: "0",
         },
@@ -750,7 +778,7 @@ class Wnacg extends ComicSource {
             title: "Custom Domain",
             type: "input",
             validator: String.raw`^(?!:\/\/)(?=.{1,253})([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`,
-            default: 'wnacg.com',
+            default: 'www.wn06.cfd',
         },
     }
 
