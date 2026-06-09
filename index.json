@@ -3,7 +3,7 @@
         "name": "拷贝漫画",
         "fileName": "copy_manga.js",
         "key": "copy_manga",
-        "version": "1.4.1"
+        "version": "1.4.2"
     },
     {
         "name": "Komiic",
@@ -66,7 +66,7 @@
         "name": "少年ジャンプ＋",
         "fileName": "shonen_jump_plus.js",
         "key": "shonen_jump_plus",
-        "version": "1.1.1"
+        "version": "1.1.2"
     },
     {
         "name": "hitomi.la",
@@ -84,7 +84,7 @@
         "name": "优酷漫画",
         "fileName": "ykmh.js",
         "key": "ykmh",
-        "version": "1.0.0"
+        "version": "1.0.1"
     },
     {
         "name": "再漫画",
@@ -102,7 +102,7 @@
         "name": "漫蛙吧",
         "fileName": "manwaba.js",
         "key": "manwaba",
-        "version": "1.0.2"
+        "version": "1.0.3"
     },
     {
         "name": "Lanraragi",
@@ -120,7 +120,7 @@
         "name": "カドコミ",
         "fileName": "comic_walker.js",
         "key": "comic_walker",
-        "version": "1.0.0"
+        "version": "1.0.2"
     },
     {
         "name": "漫画1234",
@@ -174,7 +174,7 @@
         "name": "热辣漫画",
         "fileName": "hot_manga.js",
         "key": "hot_manga",
-        "version": "1.0.0"
+        "version": "1.0.1"
 	},
     {
         "name": "Kavita",

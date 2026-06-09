@@ -8,7 +8,7 @@ class ManWaBa extends ComicSource {
   // unique id of the source
   key = "manwaba";
 
-  version = "1.0.2";
+  version = "1.0.3";
 
   minAppVersion = "1.4.0";
 
@@ -221,49 +221,25 @@ class ManWaBa extends ComicSource {
         "19r": "/cate/19plus",
         "台版": "/cate/taiwanver",
       };
-      let url = this.api + pathMap[param] || "/cate";
-      let payload = JSON.stringify({
-        page: {
-          page: page,
-          pageSize: 10,
-        },
-        category: "comic",
-        sort: parseInt(options[2]),
-        comic: {
-          status: parseInt(options[0] == "2" ? -1 : options[0]),
-          day: parseInt(options[1]),
-          tag: param,
-        },
-        video: {
-          year: 0,
-          typeId: 0,
-          typeId1: 0,
-          area: "",
-          lang: "",
-          status: -1,
-          day: 0,
-        },
-        novel: {
-          status: -1,
-          day: 0,
-          sortId: 0,
-        },
-      });
-
-      let data = await this.fetchJson(url, {
-        method: "POST",
-        payload,
-      }).then((res) => res.data.list);
+      let path = pathMap[param] || "/cate";
+      let url = `https://www.mhtmh.org${path}${page > 1 ? `?page=${page}` : ""}`;
+      let res = await Network.get(url);
+      if (res.status !== 200) {
+        throw `Invalid status code: ${res.status}`;
+      }
+      let document = new HtmlDocument(res.body);
+      let data = document.querySelectorAll('a[href^="/comic/"]');
 
       function parseComic(comic) {
+        let id = comic.attributes["href"].split("/").pop();
+        let title = comic.querySelector(".title")?.text ?? "";
+        let cover = comic.querySelector(".thumb_img")?.attributes["data-src"] ?? "";
+        let tags = comic.querySelectorAll(".badge span").map((tag) => tag.text);
         return new Comic({
-          id: comic.url.split("/").pop(),
-          title: comic.title,
-          subTitle: comic.author,
-          cover: comic.pic,
-          tags: comic.tags.split(","),
-          description: comic.intro,
-          status: comic.status == 0 ? "连载中" : "已完结",
+          id: id,
+          title: title,
+          cover: cover,
+          tags: tags,
         });
       }
       return {

@@ -209,6 +209,41 @@ class Wnacg extends ComicSource {
         })
     }
 
+    parseExploreSections(html) {
+        let result = []
+        let sections = html.split('<div class="title_sort" class="cc">').slice(1)
+        for (let section of sections) {
+            let bodyStart = section.indexOf('<div class="bodywrap" class="cc">')
+            if (bodyStart < 0) continue
+
+            let titleDoc = new HtmlDocument(`<div class="title_sort" class="cc">${section.substring(0, bodyStart)}`)
+            let bodyDoc = new HtmlDocument(section.substring(bodyStart))
+            let titleBlock = titleDoc.querySelector("div.title_h2")
+            let linkBlock = titleDoc.querySelector("div.r > a")
+            if (!titleBlock || !linkBlock) {
+                titleDoc.dispose()
+                bodyDoc.dispose()
+                continue
+            }
+
+            let comics = []
+            for (let picBox of bodyDoc.querySelectorAll("div.pic_box")) {
+                let comicElement = picBox.parent
+                if (comicElement) {
+                    comics.push(this.parseComic(comicElement))
+                }
+            }
+            result.push({
+                title: titleBlock.text.replaceAll(/\s+/g, ''),
+                comics: comics,
+                viewMore: `category:${titleBlock.text.replaceAll(/\s+/g, '')}@${linkBlock.attributes["href"]}`
+            })
+            titleDoc.dispose()
+            bodyDoc.dispose()
+        }
+        return result
+    }
+
     // explore page list
     explore = [
         {
@@ -236,7 +271,12 @@ class Wnacg extends ComicSource {
                 let titleBlocks = document.querySelectorAll("div.title_sort");
                 let comicBlocks = document.querySelectorAll("div.bodywrap");
                 if (titleBlocks.length !== comicBlocks.length) {
-                    throw "Invalid Page"
+                    document.dispose()
+                    let result = this.parseExploreSections(res.body)
+                    if (result.length === 0) {
+                        throw "Invalid Page"
+                    }
+                    return result
                 }
                 let result = []
                 for (let i = 0; i < titleBlocks.length; i++) {
