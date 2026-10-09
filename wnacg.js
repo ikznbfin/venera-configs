@@ -7,7 +7,7 @@ class Wnacg extends ComicSource {
     // unique id of the source
     key = "wnacg"
 
-    version = "1.0.5"
+    version = "1.0.6"
 
     minAppVersion = "1.0.0"
 
@@ -15,6 +15,7 @@ class Wnacg extends ComicSource {
     url = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/wnacg.js"
 
     static domains = [
+        "www.wn10.cfd",
         "www.wn06.cfd",
         "www.wn07.cfd",
         "www.wn07.shop",

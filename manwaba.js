@@ -8,7 +8,7 @@ class ManWaBa extends ComicSource {
   // unique id of the source
   key = "manwaba";
 
-  version = "1.0.3";
+  version = "1.0.4";
 
   minAppVersion = "1.4.0";
 
@@ -16,7 +16,7 @@ class ManWaBa extends ComicSource {
   url = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/manwaba.js";
 
   //api = "https://www.manwaba.com/api"; //重定向之前的地址无法使用分类
-  api = "https://www.mhtmh.org/api";
+  api = "https://manwaxu.cc/api";
 
   init() {
     /**
@@ -222,7 +222,7 @@ class ManWaBa extends ComicSource {
         "台版": "/cate/taiwanver",
       };
       let path = pathMap[param] || "/cate";
-      let url = `https://www.mhtmh.org${path}${page > 1 ? `?page=${page}` : ""}`;
+      let url = `https://manwaxu.cc${path}${page > 1 ? `?page=${page}` : ""}`;
       let res = await Network.get(url);
       if (res.status !== 200) {
         throw `Invalid status code: ${res.status}`;
