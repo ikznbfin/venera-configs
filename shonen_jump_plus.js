@@ -1,7 +1,7 @@
 class ShonenJumpPlus extends ComicSource {
   name = "少年ジャンプ＋";
   key = "shonen_jump_plus";
-  version = "1.1.2";
+  version = "1.1.3";
   minAppVersion = "1.2.1";
   url =
     "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/shonen_jump_plus.js";
@@ -10,15 +10,17 @@ class ShonenJumpPlus extends ComicSource {
   bearerToken = null;
   userAccountId = null;
   tokenExpiry = 0;
-  latestVersion = "4.1.0";
-  minSupportedVersion = "4.1.0";
+  latestVersion = "4.0.41";
+  minSupportedVersion = "4.0.0";
 
   get headers() {
     return {
       "Origin": "https://shonenjumpplus.com",
       "Referer": "https://shonenjumpplus.com/",
       "X-Giga-Device-Id": this.deviceId,
-      "User-Agent": `ShonenJumpPlus-Android/${this.latestVersion}`,
+      // api 的 nginx 会直接 403 掉 ShonenJumpPlus-Android/* 的 UA，改用普通浏览器 UA
+      "User-Agent":
+        "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
     };
   }
 

@@ -727,20 +727,39 @@ class Wnacg extends ComicSource {
                 chapters = new Map()
                 let page = 1
                 let maxPage = 1
+                let pageUrlTpl = null
+                let total = 0
                 try {
+                    // Series pages carry their own pagination info in #sr_pub, so
+                    // prefer it over the generic paginator links (which are absent
+                    // on series layout).
+                    let srPub = document.querySelector("#sr_pub")
+                    if (srPub) {
+                        total = Number(srPub.attributes["data-total"] || "0") || 0
+                        let per = Number(srPub.attributes["data-per"] || "0") || 0
+                        pageUrlTpl = srPub.attributes["data-pageurl"] || null
+                        if (total > 0 && per > 0) maxPage = Math.max(1, Math.ceil(total / per))
+                    }
                     while (true) {
                         for (let chapter of document.querySelectorAll("a[data-chid]")) {
                             chapters.set(chapter.attributes["data-chid"], chapter.text.trim())
                         }
                         for (let link of document.querySelectorAll("div.f_left.paginator a[href]")) {
-                            let match = link.attributes["href"].match(/-page-(\d+)-/)
+                            let match = link.attributes["href"].match(/-page-(\d+)/)
                             if (match) maxPage = Math.max(maxPage, Number(match[1]))
                         }
-                        if (page >= maxPage) break
+                        if (page >= maxPage || (total > 0 && chapters.size >= total)) break
                         page++
                         document.dispose()
                         document = null
-                        let chapterRes = await Network.get(`${this.baseUrl}/photos-index-page-${page}-aid-${id}.html?order=asc&mode=list`, {})
+                        let chapterUrl
+                        if (pageUrlTpl) {
+                            let tpl = pageUrlTpl.replace(/%5B/gi, "[").replace(/%5D/gi, "]").replace(/%23/gi, "#")
+                            chapterUrl = this.baseUrl + tpl.replace("[#page]", page).replace("#page#", page)
+                        } else {
+                            chapterUrl = `${this.baseUrl}/photos-index-page-${page}-aid-${id}.html?order=asc&mode=list`
+                        }
+                        let chapterRes = await Network.get(chapterUrl, {})
                         if (chapterRes.status !== 200) {
                             throw `Invalid Status Code ${chapterRes.status}`
                         }

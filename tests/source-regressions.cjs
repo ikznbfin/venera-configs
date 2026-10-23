@@ -137,9 +137,9 @@ test('Baozi defaults to a live compatible mirror and keeps source/index versions
     calls.push(url);
     return {status: 200, body: JSON.stringify({items: [{comic_id: '42', name: 'fixture', topic_img: 'cover.jpg'}], next: false})};
   }});
-  assert.equal(c.source.baseUrl, 'https://cn.webmota.com');
+  assert.equal(c.source.baseUrl, 'https://cn.kukuc.co');
   const result = await c.source.categoryComics.load('全部', 'all', ['all', 'all'], 1);
-  assert.match(calls[0], /^https:\/\/cn\.webmota\.com\/api\/bzmhq\/amp_comic_list/);
+  assert.match(calls[0], /^https:\/\/cn\.kukuc\.co\/api\/bzmhq\/amp_comic_list/);
   assert.equal(result.comics[0].id, '42');
   const index = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'index.json'), 'utf8'));
   assert.equal(c.source.version, index.find(x => x.fileName === 'baozi.js').version);
@@ -161,4 +161,50 @@ test('Komga initializes without removed default credential settings and uses sav
   source.loadData = key => key === 'komga_auth' ? 'saved-basic-token' : null;
   assert.equal(source.authToken, 'saved-basic-token');
   assert.equal(source.headers.Authorization, 'Basic saved-basic-token');
+});
+
+
+test('Baozi loads chapter pages from the selected mirror and parses the current AMP image markup', async () => {
+  const calls = [];
+  const c = load('baozi.js', {get: async url => {
+    calls.push(url);
+    return {status: 200, body: 'chapter-fixture'};
+  }});
+  c.HtmlDocument = class {
+    constructor(body) { this.body = body; }
+    querySelectorAll(selector) {
+      if (selector === '.comic-contain > .chapter-img') return [];
+      if (selector === '.comic-contain .comic-contain__item') return [
+        {attributes: {'data-src': 'https://cdn.example/comic/page-1.jpg'}}
+      ];
+      return [];
+    }
+  };
+  const result = await c.source.comic.loadEp('book-7', 'chapter-9');
+  assert.equal(calls[0], 'https://cn.kukuc.co/comic/chapter/book-7/0_chapter-9.html');
+  assert.deepEqual(Array.from(result.images), ['https://cdn.example/comic/page-1.jpg']);
+});
+
+test('CCC search defaults an unset sort option to updated_at', async () => {
+  const c = load('ccc.js');
+  let requested;
+  c.source.parseComics = async url => { requested = url; return {comics: [], maxPage: 1}; };
+  await c.source.search.load('fixture', Array(7).fill(null), 1);
+  assert.match(requested, /sort_by=updated_at/);
+  assert.doesNotMatch(requested, /undefined/);
+});
+
+test('Shonen Jump+ uses a browser-compatible API User-Agent', () => {
+  const c = load('shonen_jump_plus.js');
+  assert.match(c.source.headers['User-Agent'], /Mozilla|Chrome|Safari/i);
+  assert.doesNotMatch(c.source.headers['User-Agent'], /ShonenJumpPlus-Android/i);
+});
+
+test('Wnacg retains dynamic mirror settings and the series pagination metadata path', () => {
+  const c = load('wnacg.js');
+  const options = c.source.settings.domainSelection.options;
+  assert.ok(options.length >= 5);
+  const text = fs.readFileSync(path.join(__dirname, '..', 'wnacg.js'), 'utf8');
+  assert.match(text, /data-total/);
+  assert.match(text, /data-pageurl/);
 });
