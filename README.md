@@ -1,33 +1,53 @@
-# Venera 漫画源配置
+# Venera 漫画源
 
-这是一个面向 Venera 漫画阅读器的独立漫画源配置项目，集中维护可由 Venera 加载的 JavaScript 漫画源。项目由个人维护，属于社区配置仓库，不是 Venera 官方应用，也不代表上游项目。
+为 Venera 维护的一组独立 JavaScript 漫画源与个人书库连接器。仓库里的每个源都是单独的脚本，目录清单记录名称、文件名、标识和版本，方便按需选择、导入和检查。
 
-仓库包含在线漫画站点源，以及 Komga、Kavita、Lanraragi 等个人书库服务的连接源。各源分别实现搜索、分类、漫画详情、章节目录和阅读等能力；具体支持哪些功能，以对应源文件为准。
+这是一个社区维护的配置仓库，不是 Venera 应用本身，也不是官方上游仓库。源脚本负责把各站点或书库的接口接入 Venera；站点服务、账号权限和网络环境由各自服务提供方决定。
 
-## 源目录
+## 收录内容
 
-`index.json` 汇总当前收录源的名称、文件名、标识和版本。每个 `.js` 文件是一项独立源配置。
+当前 `index.json` 列出 30 个源。在线漫画站点与目录源如下：
 
-### 在线漫画站点
+| 源 | 脚本 |
+| --- | --- |
+| 拷贝漫画 | `copy_manga.js` |
+| Komiic | `komiic.js` |
+| 包子漫画 | `baozi.js` |
+| Picacg | `picacg.js` |
+| nhentai | `nhentai.js` |
+| 紳士漫畫 | `wnacg.js` |
+| ehentai | `ehentai.js` |
+| 禁漫天堂 | `jm.js` |
+| MangaDex | `manga_dex.js` |
+| 爱看漫 | `ikmmh.js` |
+| 少年ジャンプ＋ | `shonen_jump_plus.js` |
+| hitomi.la | `hitomi.js` |
+| comick | `comick.js` |
+| 优酷漫画 | `ykmh.js` |
+| 再漫画 | `zaimanhua.js` |
+| 漫画柜 | `manhuagui.js` |
+| 漫蛙吧 | `manwaba.js` |
+| カドコミ | `comic_walker.js` |
+| 漫画1234 | `mh1234.js` |
+| CCC追漫台 | `ccc.js` |
+| GoDa漫画 | `goda.js` |
+| 18漫画 | `mh18.js` |
+| 漫小肆 | `mxs.js` |
+| 漫画人 | `manhuaren.js` |
+| H-Comic | `hcomic.js` |
+| jcomic.net | `jcomic.js` |
+| 热辣漫画 | `hot_manga.js` |
 
-- 拷贝漫画、Komiic、包子漫画、Picacg、爱看漫、漫蛙吧、漫画1234、漫画柜、漫画人、漫小肆、热辣漫画、优酷漫画、再漫画、GoDa漫画、CCC追漫台、H-Comic、jcomic.net
-- MangaDex、comick、Comic Walker、少年ジャンプ＋
-- nhentai、ehentai、紳士漫畫、禁漫天堂、hitomi.la、18漫画
+此外还包括连接个人书库的 Komga（`komga.js`）、Kavita（`kavita.js`）和 Lanraragi（`lanraragi.js`）。这些服务需要你自己的服务器地址及相应账号配置。
 
-### 个人书库服务
+各源实现的功能和设置并不完全相同；搜索、分类、详情、章节或登录能力以对应脚本为准。`index.json` 是源名称、文件名、`key` 和版本号的目录；`_template_.js` 提供新源结构示例，`_venera_.js` 提供 Venera 源 API 的类型与接口参考。
 
-- Komga
-- Kavita
-- Lanraragi
+## 导入单个源
 
-站点域名、登录要求、地区限制和反爬策略可能变化。收录不代表站点始终可访问，也不保证每个源在所有网络环境或 Venera 版本中都能正常使用。
-
-## 使用
-
-如果你使用的 Venera 版本支持添加自定义 JavaScript 漫画源，可从对应源文件导入；本仓库文件的 Raw 地址格式为：
+如果你使用的 Venera 版本支持导入自定义 JavaScript 源，可以直接使用对应文件的 Raw 地址：
 
 ```text
-https://raw.githubusercontent.com/ikznbfin/venera-configs/main/<文件名>.js
+https://raw.githubusercontent.com/ikznbfin/venera-configs/main/<脚本文件名>
 ```
 
 例如，包子漫画源：
@@ -36,18 +56,18 @@ https://raw.githubusercontent.com/ikznbfin/venera-configs/main/<文件名>.js
 https://raw.githubusercontent.com/ikznbfin/venera-configs/main/baozi.js
 ```
 
-将 `<文件名>` 换成 `index.json` 中列出的 `fileName`。请按你所用 Venera 版本中的自定义源导入流程操作；如果应用不支持通过 URL 添加脚本，可直接在仓库查看或下载相应文件，再按应用支持的方式导入。
+源文件名可从 [`index.json`](https://github.com/ikznbfin/venera-configs/blob/main/index.json) 查找。将地址交给应用的自定义源导入功能；如果当前版本不支持 URL 导入，可下载对应 `.js` 文件，再按应用提供的本地导入方式添加。应用的菜单位置和导入步骤可能随版本变化。
 
-Komga、Kavita 和 Lanraragi 是连接个人书库的源，需要在 Venera 中填写你自己的服务地址及该服务要求的登录信息。不要把账号、密码或访问令牌提交到此仓库。
+需要使用其他分支时，把地址中的 `main` 换成目标分支名。通过某个分支的 Raw 地址导入，才能明确选择该分支上的文件。
 
-## 仓库结构
+## 源更新地址
 
-- `index.json`：源目录及版本信息
-- `<source>.js`：单个漫画源的实现
-- `_template_.js`、`_venera_.js`：源开发模板和 Venera JavaScript API 类型/接口参考
+每个脚本内部还定义了供应用更新源时使用的地址。当前不少脚本指向官方上游 `venera-app/venera-configs`，而不是本 fork。也就是说，从本仓库导入 Raw 文件，不会自动把脚本内部的更新地址改成本仓库；应用后续更新时应以该脚本自身的 `url` 字段为准。若要持续使用本 fork 的改动，请用本仓库目标分支的 Raw 地址重新导入，或在脚本中将更新地址改为对应的 fork 地址。
 
-## 维护说明
+## 配置与隐私
 
-源站页面、接口、域名及认证方式可能调整。遇到无法使用的源时，请先确认网络和站点本身可访问，再检查对应源的站点设置与 Venera 日志；错误日志中不要包含密码、令牌或其他凭据。
+部分站点源需要按脚本设置域名、分流、图片 CDN 或登录信息；个人书库源需要填写你自己的服务地址和认证信息。请只在 Venera 应用的源设置中配置个人凭据，不要把密码、Cookie、访问令牌或含凭据的日志提交到 GitHub。
 
-本仓库的修改只影响这里维护的配置，不会修改 Venera 应用或官方上游仓库。提交问题时，请附上源名称、Venera 版本、复现步骤和已脱敏的错误信息，便于定位。
+## 可用性说明
+
+脚本被收录或离线解析测试通过，不代表对应网站当前可访问，也不保证每个源都能在所有网络、地区或 Venera 版本中正常阅读。站点可能调整域名、接口、反爬策略或登录要求；个人书库则取决于服务器可达性和自身配置。遇到问题时，先确认站点或服务器在当前网络可访问，再检查源设置和 Venera 日志；分享日志前请移除账号、密码、Cookie、令牌等敏感信息。
