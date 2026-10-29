@@ -78,9 +78,46 @@ test('CopyManga exposes HTTP status and denial message, not an undefined res', a
   await assert.rejects(c.source.comic.loadInfo('fixture'), err => String(err).includes('210') && String(err).includes('fixture restriction') && !String(err).includes('ReferenceError'));
 });
 
+test('Copymanga discovery and request-id lookup never leak account headers to untrusted hosts', async () => {
+  for (const file of ['copy_manga.js', 'copy_manga_multi_accounts.js']) {
+    const networkCalls = [];
+    const c = load(file, {get: async (...args) => {
+      networkCalls.push(args);
+      return {status: 200, body: JSON.stringify({results: {request_id: 'fixture-id'}})};
+    }});
+    c.source.settings.region.default = '1';
+    assert.equal(await c.source.getReqID(), 'fixture-id');
+    assert.equal(networkCalls[0][0], 'https://marketing.aiacgn.com/api/v2/adopr/query3/?format=json&ident=200100001');
+    assert.equal(JSON.stringify(networkCalls[0][1]), '{}');
+
+    const fetchCalls = [];
+    c.fetch = async (url, options) => {
+      fetchCalls.push({url, options});
+      if (url.endsWith('/api/v3/system/network2?platform=3')) {
+        return {status: 200, json: async () => ({results: {api: [
+          ['t66y.com', 'untrusted fixture'],
+          ['sub.api.copy-manga.com', 'untrusted suffix fixture'],
+          ['api.copy-manga.com', 'trusted fixture'],
+        ]}})};
+      }
+      return {status: 200, json: async () => ({code: 200})};
+    };
+    c.source.settings.base_url.default = 't66y.com';
+    assert.equal(c.source.apiUrl, 'https://api.copy2000.online');
+    await c.source.refreshAppApi();
+    assert.equal(fetchCalls[0].url, 'https://api.copy-manga.com/api/v3/system/network2?platform=3');
+    assert.equal(fetchCalls[0].options, undefined);
+    assert.deepEqual(fetchCalls.map(call => call.url), [
+      'https://api.copy-manga.com/api/v3/system/network2?platform=3',
+      'https://api.copy-manga.com/api/v3/h5/homeIndex',
+    ]);
+    assert.equal(c.source.settings.base_url.default, 'api.copy-manga.com');
+  }
+});
+
 test('Index versions agree with all repaired sources', () => {
   const index = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'index.json'), 'utf8'));
-  for (const file of ['manwaba.js', 'jcomic.js', 'copy_manga.js']) {
+  for (const file of ['manwaba.js', 'jcomic.js', 'copy_manga.js', 'copy_manga_multi_accounts.js']) {
     assert.equal(load(file).source.version, index.find(x => x.fileName === file).version);
   }
 });

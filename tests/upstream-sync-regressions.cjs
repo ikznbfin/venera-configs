@@ -25,7 +25,8 @@ test('CopyManga retains validated discovery instead of overwriting setting shape
   let cleaned=0;c.source.afterRequest=()=>cleaned++;
   await c.source.refreshAppApi();
   assert.equal(calls.length,2);assert.equal(calls[1][0],'https://api.copy-manga.com/api/v3/h5/homeIndex');
-  assert.equal(calls[1][1].headers.Authorization,undefined);
+  assert.equal(calls[0][1],undefined);
+  assert.equal(calls[1][1],undefined);
   assert.equal(c.source.settings.base_url.default,'api.copy-manga.com');
   assert.equal(typeof c.source.settings.base_url,'object');assert.equal(cleaned,1);
 });

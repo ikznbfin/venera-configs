@@ -4,7 +4,7 @@ class CopyManga extends ComicSource {
 
     key = "copy_manga"
 
-    version = "1.4.5"
+    version = "1.4.6"
 
     minAppVersion = "1.6.0"
 
@@ -17,7 +17,7 @@ class CopyManga extends ComicSource {
         const reqIdUrl = "https://marketing.aiacgn.com/api/v2/adopr/query3/?format=json&ident=200100001";
         let reqId = "";
         try {
-            const response = await this.networkGet(reqIdUrl, this.headers);
+            const response = await this.networkGet(reqIdUrl, {});
 
             if (response.status === 200) {
                 const data = JSON.parse(response.body);
@@ -78,6 +78,18 @@ class CopyManga extends ComicSource {
     static defaultImageQuality = "1500"
 
     static defaultApiUrl = 'api.copy2000.online'
+
+    // Only accept API hosts already verified as Copymanga endpoints.
+    static trustedApiHosts = ["api.copy-manga.com", "api.copy2000.online"];
+
+    static normalizeApiHost(host) {
+        if (typeof host !== "string") return "";
+        return host.trim().toLowerCase().replace(/\.$/, "");
+    }
+
+    static isTrustedApiHost(host) {
+        return CopyManga.trustedApiHosts.includes(CopyManga.normalizeApiHost(host));
+    }
 
     static searchApi = "/api/kb/web/searchb/comics"
 
@@ -184,7 +196,11 @@ class CopyManga extends ComicSource {
     }
 
     get apiUrl() {
-        return `https://${this.loadSetting('base_url')}`
+        const configuredHost = CopyManga.normalizeApiHost(this.loadSetting('base_url'));
+        const host = CopyManga.isTrustedApiHost(configuredHost)
+            ? configuredHost
+            : CopyManga.defaultApiUrl;
+        return `https://${host}`;
     }
 
     get copyRegion() {
@@ -1145,27 +1161,25 @@ class CopyManga extends ComicSource {
     }
 
     async refreshAppApi() {
-        const url = "https://api.copy-manga.com/api/v3/system/network2?platform=3"
+        const url = "https://api.copy-manga.com/api/v3/system/network2?platform=3";
         try {
-            const res = await fetch(url, { headers: this.headers });
-            if (res.status === 200) {
-                let data = await res.json();
-                let apis = data.results?.api ?? [];
-                for (const item of apis) {
-                    let api = item?.[0];
-                    // Only copy-manga hosts are accepted, and the check sends no account headers,
-                    // so the user's token is never sent to an unrelated host.
-                    if (!api || !/copy/i.test(api)) continue;
-                    try {
-                        const check = await fetch(`https://${api}/api/v3/h5/homeIndex`, { headers: { "User-Agent": this.headers["User-Agent"] } });
-                        if (check.status === 200 && (await check.json())?.code === 200) {
-                            this.settings.base_url.default = api;
-                            return;
-                        }
-                    } catch (e) { }
-                }
+            const res = await fetch(url);
+            if (res.status !== 200) return;
+            const data = await res.json();
+            const apis = data.results?.api ?? [];
+            for (const item of apis) {
+                const api = CopyManga.normalizeApiHost(item?.[0]);
+                if (!CopyManga.isTrustedApiHost(api)) continue;
+                try {
+                    const check = await fetch(`https://${api}/api/v3/h5/homeIndex`);
+                    if (check.status === 200 && (await check.json())?.code === 200) {
+                        this.settings.base_url.default = api;
+                        return;
+                    }
+                } catch (e) { }
             }
-        } catch (e) { } finally {
+        } catch (e) { }
+        finally {
             this.afterRequest();
         }
     }
