@@ -10,7 +10,7 @@ class HotManga extends ComicSource {
 
     key = "hot_manga"
 
-    version = "1.0.1"
+    version = "1.0.2"
 
     minAppVersion = "1.6.0"
 
@@ -798,7 +798,8 @@ class HotManga extends ComicSource {
             if (res.status === 200) {
                 let data = await res.json();
                 let apis = (data.results?.api || []).flat();
-                let api = HotManga.preferredApiUrls.find((item) => apis.includes(item)) || apis[0];
+                // Keep auth headers on known mirrors; never adopt an arbitrary discovered host.
+                const api = HotManga.preferredApiUrls.find((item) => apis.includes(item));
                 if (api) {
                     this.settings.base_url.default = api;
                 }

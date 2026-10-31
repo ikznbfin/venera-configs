@@ -117,7 +117,7 @@ test('Copymanga discovery and request-id lookup never leak account headers to un
 
 test('Index versions agree with all repaired sources', () => {
   const index = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'index.json'), 'utf8'));
-  for (const file of ['manwaba.js', 'jcomic.js', 'copy_manga.js', 'copy_manga_multi_accounts.js']) {
+  for (const file of ['manwaba.js', 'jcomic.js', 'copy_manga.js', 'copy_manga_multi_accounts.js', 'hot_manga.js']) {
     assert.equal(load(file).source.version, index.find(x => x.fileName === file).version);
   }
 });
@@ -244,4 +244,26 @@ test('Wnacg retains dynamic mirror settings and the series pagination metadata p
   const text = fs.readFileSync(path.join(__dirname, '..', 'wnacg.js'), 'utf8');
   assert.match(text, /data-total/);
   assert.match(text, /data-pageurl/);
+});
+
+
+test('Hot Manga discovery ignores unknown API hosts but accepts a known mirror', async () => {
+  const c = load('hot_manga.js');
+  const defaultHost = c.source.settings.base_url.default;
+  let responseHosts = [['untrusted.example']];
+  let discoveryRequest;
+  c.source.loadData = key => key === 'token' ? 'fixture-token' : null;
+  c.fetch = async (url, options) => {
+    discoveryRequest = {url, options};
+    return {status: 200, json: async () => ({results: {api: responseHosts}})};
+  };
+  await c.source.refreshAppApi();
+  assert.equal(discoveryRequest.url, `https://${defaultHost}/api/v3/system/network2?format=json&platform=3`);
+  assert.equal(discoveryRequest.options.headers.Authorization, 'Token fixture-token');
+  assert.equal(c.source.settings.base_url.default, defaultHost);
+  assert.equal(c.source.apiUrl, `https://${defaultHost}`);
+
+  responseHosts = [['untrusted.example', 'mapi.elfgjfghkk.club']];
+  await c.source.refreshAppApi();
+  assert.equal(c.source.settings.base_url.default, 'mapi.elfgjfghkk.club');
 });
